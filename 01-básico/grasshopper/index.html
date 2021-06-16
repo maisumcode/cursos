@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+ <script>
+
+    const world = {};
+      world.tile = 60;
+      world.w = 10;
+      world.h = 10;
+    const c = document.createElement ('CANVAS');
+
+
+
+    document.body.appendChild (c);
+
+    const ctx = c.getContext ('2d');
+
+
+    const keymod = function () {
+
+      keymod.key = {};
+
+      down = function (e) {
+
+      };
+      up = function (e) {
+
+      };
+
+    }
+
+    keymod ();
+
+    // tile object //
+
+    const TileObject = function (tx, ty) {
+
+      this.tile = {
+
+        x: tx,
+        y: ty,
+
+        index: 0,
+
+      };
+
+      this.x = tx * world.tile;
+      this.y = ty * world.tile;
+
+      this.w = this.h = world.tile;
+
+      this.v = {
+
+        x: 0,
+        y: 0
+
+      };
+
+      this.tile.index = this.tile.y * world.w + this.tile.x;
+
+    };
+
+      TileObject.prototype.drawbox = function (color) {
+
+        ctx.fillStyle = color;
+
+        ctx.fillRect (this.x, this.y, this.w, this.h);
+
+        ctx.strokeStyle = '#fff';
+
+        ctx.strokeRect (
+
+          this.tile.x * world.tile - 0.5, this.tile.y * world.tile - 0.5, world.tile, world.tile
+
+        );
+
+
+      }
+
+      TileObject.prototype.updateMapIndex = function () {
+
+      };
+
+      TileObject.prototype.getNeighbourIndexes = function () {
+
+        const top = this.tile.index - world.w;
+        const mid = this.tile.index;
+        const bot = this.tile.index + world.w;
+
+        return this.tile = [
+
+          top - 1,  top,  top + 1,
+
+          mid - 1,  mid,  mid + 1,
+
+          bot - 1,  bot,  bot + 1
+
+        ];
+
+      };
+
+
+    const player = new TileObject ();
+
+      player.vel = {
+
+        x: 0,
+        y: 0
+
+      };
+
+      player.maxvel = 2.4;
+
+      player.update = function () {
+
+
+
+        this.vel.x = this.vel.y = 0;
+
+
+
+        if (keymod.key.KeyW && !keymod.key.KeyS)
+
+          this.vel.y = -this;
+
+        else if (keymod.key.KeyS && !keymod.key.KeyW)
+
+          this.vel.y = this;
+
+          // left right
+
+        if (keymod.key.KeyA && !keymod.key.KeyD)
+
+          this.vel.x = -this;
+
+        else if (keymod.key.KeyD && !keymod.key.KeyA)
+
+          this.vel.x = this.maxvel;
+
+        // update //
+
+        this.x += this.vel.x;
+        this.y += this.vel.y;
+
+        // tiles //
+
+        this.updateMapIndex ();
+
+        this.getNeighbourIndexes ();
+
+        for (let i = 0; i < this.tile.length; i++) {
+
+          const tile = world.map[this.tile[i]];
+
+          if (!tile)
+            continue;
+
+          this.checkCollision (tile);
+
+        }
+
+        return 0;
+
+      }
+
+      player.checkCollision = function (obj) {
+
+        const top = obj.y - this.h;
+        const bottom = obj.y + obj.h;
+
+        const left = obj.x - this.w;
+        const right = obj.x + obj.w;
+
+        if (this.x > left && this.x < right) {
+
+          if (this.y >= top && this.y - this.vel.y <= top) {
+
+            this.y = top;
+            this.vel.y = 0;
+
+            return 1;
+
+          }
+          if (this.y <= bottom && this.y - this.vel.y >= bottom) {
+
+            this.y = bottom;
+            this.vel.y = 0;
+
+
+
+          }
+
+        }
+        if (this.y > top && this.y < bottom) {
+
+          if (this.x >= left && this.x - this.vel.x <= left) {
+
+            this.x = left;
+            this.vel.x = 0;
+
+            return 1;
+
+          }
+          if (this.x <= right && this.x - this.vel.x >= right) {
+
+            this.x = right;
+            this.vel.x = 0;
+
+            return 1;
+
+          }
+
+        }
+
+
+
+      }
+
+
+
+    world.map = [
+
+      1,1,1,
+
+    ];
+
+
+    for (let i = 0; i < world.map.length; i++) {
+
+      if (!world.map[i])
+        continue;
+
+      let offx = i;
+
+      let offy = 0;
+
+      while (offx >= world.w) {
+
+
+
+
+
+      }
+
+      world.map[i] = new TileObject (offx, offy);
+
+    }
+
+
+    const FPS = 16; // ms
+
+    const loop = function () {
+
+      loop.update ();
+
+      requestAnimationFrame (loop.render);
+
+      setTimeout (loop, FPS);
+
+
+
+    };
+
+      loop.update = function () {
+
+        player.update ();
+
+        return 0;
+
+      };
+
+      loop.render = function () {
+
+        // backdrop //
+
+        ctx.fillStyle = '#222';
+
+        ctx.fillRect (0, 0, c.width, c.height);
+
+        // map //
+
+        for (let i = 0; i < world.map.length; i++) {
+
+          if (!world.map[i])
+            continue;
+
+          world.map[i].drawbox ('blue');
+        }
+      };
+
+  loop ();
+
+    document.addEventListener ( e => {
+
+
+      for (let i = 0; i < world.map.length; i++) {
+
+        if (!world.map[i])
+          continue;
+
+        if (
+
+          x > world.map[i].x && x < world.map[i].x + world.map[i].w &&
+          y > world.map[i].y && y < world.map[i].y + world.map[i].h
+
+        ) {
+
+        }
+
+      }
+
+    });
+
+  </script></body>
+
+
+</html>
